@@ -1,0 +1,13 @@
+{
+  "default_simulations": 10000,
+  "random_seed": 42,
+  "base_goals_per_team": 1.32,
+  "home_advantage_multiplier": 1.08,
+  "form_weight": 0.12,
+  "rating_scale": 520,
+  "use_home_advantage": true,
+  "use_recent_form": true,
+  "third_place_qualifiers": 8,
+  "groups_count": 12,
+  "teams_per_group": 4
+}

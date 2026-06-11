@@ -1,0 +1,49 @@
+team,overall_rating,attack_rating,defense_rating,recent_form,elo_rating,data_source
+France,92,91,90,88,1989,manual_base
+Spain,91,90,88,90,1985,manual_base
+England,89,88,86,87,1960,manual_base
+Portugal,89,91,84,86,1958,manual_base
+Germany,88,87,86,85,1945,manual_base
+Brazil,90,89,87,84,1978,manual_base
+Argentina,91,90,86,88,1990,manual_base
+Netherlands,87,86,85,84,1935,manual_base
+Belgium,85,85,82,80,1910,manual_base
+Italy,85,82,86,82,1920,manual_base
+Uruguay,84,83,83,82,1915,manual_base
+Colombia,83,84,80,82,1895,manual_base
+Mexico,82,81,79,80,1880,manual_base
+USA,80,79,78,79,1855,manual_base
+Japan,82,80,80,83,1875,manual_base
+Morocco,82,79,83,82,1880,manual_base
+Croatia,83,81,82,79,1900,manual_base
+Denmark,82,80,81,80,1880,manual_base
+Switzerland,81,79,80,79,1860,manual_base
+Senegal,81,80,79,80,1855,manual_base
+Poland,79,78,78,77,1830,manual_base
+Australia,77,76,76,75,1800,manual_base
+South Korea,80,80,77,79,1845,manual_base
+Ecuador,78,78,75,77,1810,manual_base
+Canada,78,77,76,78,1810,manual_base
+Serbia,80,80,78,78,1850,manual_base
+Wales,77,76,76,75,1795,manual_base
+Cameroon,75,75,73,74,1760,manual_base
+Tunisia,76,74,75,74,1775,manual_base
+Qatar,69,68,67,67,1680,manual_base
+Ghana,74,74,71,72,1745,manual_base
+Costa Rica,73,71,72,71,1720,manual_base
+Saudi Arabia,73,72,71,72,1720,manual_base
+Iran,74,72,73,72,1740,manual_base
+Egypt,75,74,73,73,1760,manual_base
+Nigeria,77,78,73,75,1795,manual_base
+Algeria,76,75,74,74,1775,manual_base
+Ivory Coast,77,77,73,75,1795,manual_base
+Mali,73,73,71,72,1720,manual_base
+Panama,70,68,70,69,1690,manual_base
+Honduras,68,67,66,66,1660,manual_base
+Jamaica,67,66,65,65,1645,manual_base
+New Zealand,65,63,64,63,1620,manual_base
+Indonesia,62,61,60,60,1580,manual_base
+Thailand,61,60,59,59,1565,manual_base
+Venezuela,71,71,69,70,1705,manual_base
+Bolivia,66,65,64,64,1635,manual_base
+Paraguay,72,71,70,71,1710,manual_base
