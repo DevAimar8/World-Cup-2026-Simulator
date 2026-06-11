@@ -5,8 +5,8 @@ from pathlib import Path
 # Rutas base del proyecto
 # \\\\\\\\\\\
 
-ROOT_DIR = Path(__file__).parent.parent
-DATA_DIR = ROOT_DIR / "data"
+ROOT_DIR   = Path(__file__).parent.parent
+DATA_DIR   = ROOT_DIR / "data"
 OUTPUTS_DIR = ROOT_DIR / "outputs"
 OUTPUTS_DIR.mkdir(exist_ok=True)
 
@@ -15,49 +15,67 @@ OUTPUTS_DIR.mkdir(exist_ok=True)
 # \\\\\\\\\\\
 
 def load_config() -> dict:
-    """Carga y devuelve el diccionario de configuración del modelo."""
-    config_path = DATA_DIR / "config.json"
-    with open(config_path, "r") as f:
+    with open(DATA_DIR / "config.json", "r") as f:
         return json.load(f)
-
-# \\\\\\\\\\\
-# Parámetros globales accesibles directamente
-# \\\\\\\\\\\
 
 _cfg = load_config()
 
-DEFAULT_SIMULATIONS: int       = _cfg["default_simulations"]
-RANDOM_SEED: int               = _cfg["random_seed"]
-BASE_GOALS: float              = _cfg["base_goals_per_team"]
-HOME_ADVANTAGE: float          = _cfg["home_advantage_multiplier"]
-FORM_WEIGHT: float             = _cfg["form_weight"]
-RATING_SCALE: float            = _cfg["rating_scale"]
-USE_HOME_ADVANTAGE: bool       = _cfg["use_home_advantage"]
-USE_RECENT_FORM: bool          = _cfg["use_recent_form"]
-THIRD_PLACE_QUALIFIERS: int    = _cfg["third_place_qualifiers"]
-GROUPS_COUNT: int              = _cfg["groups_count"]
-TEAMS_PER_GROUP: int           = _cfg["teams_per_group"]
+# \\\\\\\\\\\
+# Parámetros globales del modelo
+# \\\\\\\\\\\
+
+DEFAULT_SIMULATIONS:    int   = _cfg["default_simulations"]
+RANDOM_SEED:            int   = _cfg["random_seed"]
+BASE_GOALS:             float = _cfg["base_goals_per_team"]
+HOME_ADVANTAGE:         float = _cfg["home_advantage_multiplier"]
+FORM_WEIGHT:            float = _cfg["form_weight"]
+RATING_SCALE:           float = _cfg["rating_scale"]
+USE_HOME_ADVANTAGE:     bool  = _cfg["use_home_advantage"]
+USE_RECENT_FORM:        bool  = _cfg["use_recent_form"]
+THIRD_PLACE_QUALIFIERS: int   = _cfg["third_place_qualifiers"]
+GROUPS_COUNT:           int   = _cfg["groups_count"]
+TEAMS_PER_GROUP:        int   = _cfg["teams_per_group"]
 
 # \\\\\\\\\\\
-# Mapeo de nombres: soccerdata → teams.csv
-# Permite alinear nombres de ClubElo/SoFIFA con los usados en el proyecto
+# Parámetros del modelo Dixon-Coles
+# \\\\\\\\\\\
+
+DIXON_COLES_RHO: float = _cfg["dixon_coles_rho"]
+
+# \\\\\\\\\\\
+# Pesos de las fuentes de datos para el rating compuesto
+# \\\\\\\\\\\
+
+FIFA_RANKING_WEIGHT: float = _cfg["fifa_ranking_weight"]
+ELO_WEIGHT:          float = _cfg["elo_weight"]
+SOFIFA_WEIGHT:       float = _cfg["sofifa_weight"]
+FORM_DATA_WEIGHT:    float = _cfg["form_data_weight"]
+
+# \\\\\\\\\\\
+# Fuerza histórica por confederación (factor contextual del Mundial)
+# \\\\\\\\\\\
+
+CONFEDERATION_STRENGTH: dict = _cfg["confederation_strength"]
+
+# \\\\\\\\\\\
+# Exponente para penaltis (mayor = más ventaja al equipo mejor)
+# \\\\\\\\\\\
+
+PENALTY_ALPHA: float = _cfg["penalty_alpha"]
+
+# \\\\\\\\\\\
+# Mapa de normalización de nombres entre fuentes externas y teams.csv
 # \\\\\\\\\\\
 
 TEAM_NAME_MAP: dict = {
-    # ClubElo usa nombres abreviados o en inglés
-    "Man City":         "Manchester City",
-    "Man Utd":          "Manchester United",
-    "Inter":            "Inter Milan",
-    "Atletico":         "Atletico Madrid",
-    "Leverkusen":       "Bayer Leverkusen",
-    # Nombres de selecciones nacionales
     "Korea Republic":   "South Korea",
     "Côte d'Ivoire":    "Ivory Coast",
     "IR Iran":          "Iran",
-    "USA":              "USA",
     "United States":    "USA",
+    "Man City":         "Manchester City",
+    "Inter":            "Inter Milan",
+    "Atletico":         "Atletico Madrid",
 }
 
 def normalize_team_name(name: str) -> str:
-    """Normaliza un nombre de equipo usando el mapa de equivalencias."""
     return TEAM_NAME_MAP.get(name, name)
