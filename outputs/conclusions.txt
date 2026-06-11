@@ -1,0 +1,53 @@
+=================================================================
+  CONCLUSIONES DEL SIMULADOR MONTE CARLO — MUNDIAL 2026
+=================================================================
+
+1. GRAN FAVORITO AL TÍTULO
+   Switzerland con 14.0% de probabilidad.
+   Rating compuesto: 74.3
+
+2. EQUIPO MÁS VECES EN LA FINAL
+   Denmark llega a la final en el 10.0% de simulaciones.
+
+3. EQUIPO MÁS CONSISTENTE (llega lejos sin grandes altibajos)
+   Germany — índice de consistencia: 6.67
+   Semis: 20.0% | Eliminado en grupos: 2.0%
+
+4. MAYOR VARIANZA — EQUIPO MÁS IMPREDECIBLE
+   Switzerland puede ganarlo todo o caer en grupos.
+   Campeón: 14.0% | Eliminado grupos: 26.0%
+
+5. MEDIA DE PUNTOS PARA CLASIFICARSE COMO TERCER
+   Clasificados: 3.65
+   Mínimo clasificado: 2.0
+   Máximo clasificado: 6.0
+   Máximo eliminado: 4.0
+
+6. GRUPOS
+   Más difícil: Grupo H (rating medio 72.3)
+   → England / Senegal / Nigeria / Iran
+   Más accesible: Grupo F (rating medio 59.2)
+   → Brazil / Colombia / Indonesia / Thailand
+
+7. FINAL MÁS PROBABLE
+   Portugal vs Switzerland — ocurre en el 4.0% de simulaciones.
+
+8. POSIBLES SORPRESAS (rating < 80, llegan a cuartos en >5% de simulaciones)
+   Switzerland: 24.0% cuartos | rating 74.3
+   Egypt: 10.0% cuartos | rating 63.6
+   USA: 22.0% cuartos | rating 74.2
+   Denmark: 30.0% cuartos | rating 75.7
+
+9. PASE DE GRUPOS POR CONFEDERACIÓN (media)
+   AFC        → 54.0% de media
+   CAF        → 59.8% de media
+   CONCACAF   → 55.1% de media
+   CONMEBOL   → 73.8% de media
+   OFC        → 36.0% de media
+   UEFA       → 82.7% de media
+
+-----------------------------------------------------------------
+NOTA: Resultados probabilísticos, no predicciones.
+Modelo: Dixon-Coles + factores contextuales del Mundial.
+Modificar ratings.csv cambia significativamente los resultados.
+-----------------------------------------------------------------

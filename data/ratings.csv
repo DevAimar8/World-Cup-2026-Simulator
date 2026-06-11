@@ -1,0 +1,49 @@
+team,overall_rating,attack_rating,defense_rating,recent_form,elo_rating,fifa_ranking,attack_coef,defense_coef,data_source
+France,92,91,90,88,1989,2,1.42,0.68,manual_base
+Spain,91,90,88,90,1985,3,1.38,0.70,manual_base
+England,89,88,86,87,1960,5,1.33,0.74,manual_base
+Portugal,89,91,84,86,1958,6,1.36,0.76,manual_base
+Germany,88,87,86,85,1945,4,1.31,0.74,manual_base
+Brazil,90,89,87,84,1978,1,1.37,0.72,manual_base
+Argentina,91,90,86,88,1990,1,1.40,0.73,manual_base
+Netherlands,87,86,85,84,1935,7,1.30,0.75,manual_base
+Belgium,85,85,82,80,1910,3,1.27,0.78,manual_base
+Italy,85,82,86,82,1920,9,1.24,0.73,manual_base
+Uruguay,84,83,83,82,1915,11,1.25,0.77,manual_base
+Colombia,83,84,80,82,1895,12,1.26,0.80,manual_base
+Mexico,82,81,79,80,1880,15,1.22,0.82,manual_base
+USA,80,79,78,79,1855,16,1.19,0.83,manual_base
+Japan,82,80,80,83,1875,18,1.21,0.81,manual_base
+Morocco,82,79,83,82,1880,14,1.19,0.77,manual_base
+Croatia,83,81,82,79,1900,10,1.22,0.78,manual_base
+Denmark,82,80,81,80,1880,21,1.20,0.79,manual_base
+Switzerland,81,79,80,79,1860,19,1.19,0.80,manual_base
+Senegal,81,80,79,80,1855,20,1.20,0.81,manual_base
+Poland,79,78,78,77,1830,26,1.17,0.83,manual_base
+Australia,77,76,76,75,1800,24,1.14,0.84,manual_base
+South Korea,80,80,77,79,1845,23,1.20,0.83,manual_base
+Ecuador,78,78,75,77,1810,44,1.17,0.85,manual_base
+Canada,78,77,76,78,1810,47,1.16,0.84,manual_base
+Serbia,80,80,78,78,1850,33,1.20,0.82,manual_base
+Wales,77,76,76,75,1795,22,1.14,0.84,manual_base
+Cameroon,75,75,73,74,1760,42,1.12,0.87,manual_base
+Tunisia,76,74,75,74,1775,29,1.11,0.86,manual_base
+Qatar,69,68,67,67,1680,37,1.02,0.95,manual_base
+Ghana,74,74,71,72,1745,66,1.11,0.89,manual_base
+Costa Rica,73,71,72,71,1720,51,1.07,0.89,manual_base
+Saudi Arabia,73,72,71,72,1720,56,1.08,0.89,manual_base
+Iran,74,72,73,72,1740,22,1.08,0.88,manual_base
+Egypt,75,74,73,73,1760,35,1.11,0.87,manual_base
+Nigeria,77,78,73,75,1795,40,1.17,0.87,manual_base
+Algeria,76,75,74,74,1775,52,1.13,0.86,manual_base
+Ivory Coast,77,77,73,75,1795,48,1.16,0.87,manual_base
+Mali,73,73,71,72,1720,57,1.10,0.89,manual_base
+Panama,70,68,70,69,1690,78,1.02,0.90,manual_base
+Honduras,68,67,66,66,1660,83,0.99,0.93,manual_base
+Jamaica,67,66,65,65,1645,55,0.99,0.94,manual_base
+New Zealand,65,63,64,63,1620,91,0.94,0.96,manual_base
+Indonesia,62,61,60,60,1580,130,0.91,1.00,manual_base
+Thailand,61,60,59,59,1565,113,0.90,1.01,manual_base
+Venezuela,71,71,69,70,1705,72,1.07,0.91,manual_base
+Bolivia,66,65,64,64,1635,85,0.97,0.95,manual_base
+Paraguay,72,71,70,71,1710,63,1.07,0.90,manual_base
