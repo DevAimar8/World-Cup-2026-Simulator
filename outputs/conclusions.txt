@@ -1,0 +1,53 @@
+=================================================================
+  CONCLUSIONES DEL SIMULADOR MONTE CARLO — MUNDIAL 2026
+=================================================================
+
+1. GRAN FAVORITO AL TÍTULO
+   Argentina con 20.0% de probabilidad.
+   Rating compuesto: 89.5
+
+2. EQUIPO MÁS VECES EN LA FINAL
+   Portugal llega a la final en el 16.67% de simulaciones.
+
+3. EQUIPO MÁS CONSISTENTE (llega lejos sin grandes altibajos)
+   Argentina — índice de consistencia: 4.35
+   Semis: 33.33% | Eliminado en grupos: 6.67%
+
+4. MAYOR VARIANZA — EQUIPO MÁS IMPREDECIBLE
+   USA puede ganarlo todo o caer en grupos.
+   Campeón: 10.0% | Eliminado grupos: 36.67%
+
+5. MEDIA DE PUNTOS PARA CLASIFICARSE COMO TERCER
+   Clasificados: 3.71
+   Mínimo clasificado: 2.0
+   Máximo clasificado: 6.0
+   Máximo eliminado: 3.0
+
+6. GRUPOS
+   Más difícil: Grupo F (rating medio 70.9)
+   → Netherlands / Japan / Sweden / Tunisia
+   Más accesible: Grupo B (rating medio 60.8)
+   → Canada / Bosnia Herzegovina / Qatar / Switzerland
+
+7. FINAL MÁS PROBABLE
+   Argentina vs Portugal — ocurre en el 6.67% de simulaciones.
+
+8. POSIBLES SORPRESAS (rating < 80, llegan a cuartos en >5% de simulaciones)
+   USA: 30.0% cuartos | rating 74.3
+   Colombia: 26.67% cuartos | rating 78.0
+   Norway: 30.0% cuartos | rating 71.2
+   Czech Republic: 20.0% cuartos | rating 62.1
+
+9. PASE DE GRUPOS POR CONFEDERACIÓN (media)
+   AFC        → 55.2% de media
+   CAF        → 55.0% de media
+   CONCACAF   → 57.8% de media
+   CONMEBOL   → 75.0% de media
+   OFC        → 40.0% de media
+   UEFA       → 82.3% de media
+
+-----------------------------------------------------------------
+NOTA: Resultados probabilísticos, no predicciones.
+Modelo: Dixon-Coles + factores contextuales del Mundial.
+Modificar ratings.csv cambia significativamente los resultados.
+-----------------------------------------------------------------
