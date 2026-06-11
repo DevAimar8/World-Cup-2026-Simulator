@@ -1,11 +1,7 @@
 """
-streamlit_app.py
-----------------
-Dashboard del simulador Monte Carlo — Mundial 2026.
-Tabs: Probabilidades | Fases | Finales | Grupos | Terceros |
-      Varianza | Camino al título | Escenarios | Gráficos | Conclusiones
+streamlit_app.py — World Cup 2026 Monte Carlo Simulator
+UI completamente rediseñada: limpia, visual, sin confederaciones.
 """
-
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -13,7 +9,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import streamlit as st
 import pandas as pd
 import numpy as np
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 
 from src.monte_carlo import run_monte_carlo
 from src.data_loader import load_tournament_data
@@ -21,75 +20,72 @@ from src.analysis import generate_group_summary
 from src.visualizations import generate_all_charts
 from src.config import OUTPUTS_DIR
 
-st.set_page_config(
-    page_title="World Cup 2026 Simulator",
-    page_icon="⚽", layout="wide",
-    initial_sidebar_state="expanded",
-)
+# \\\\\\\\\\\
+# Configuración de página
+# \\\\\\\\\\\
+st.set_page_config(page_title="World Cup 2026 Simulator", page_icon="⚽",
+                   layout="wide", initial_sidebar_state="expanded")
 
 st.markdown("""
 <style>
-.metric-box { background:#161B22; border:1px solid #21262D;
-              border-radius:8px; padding:14px; text-align:center; }
+[data-testid="stSidebar"] { background: #0d1117; }
+[data-testid="stSidebar"] * { color: #e6edf3 !important; }
+.stButton > button { width: 100%; background: #238636; color: white;
+                     border: none; border-radius: 6px; padding: 10px; font-size: 15px; }
+.stButton > button:hover { background: #2ea043; }
+.metric-card { background: #161b22; border: 1px solid #30363d;
+               border-radius: 10px; padding: 18px 14px; text-align: center; }
+.metric-title { color: #8b949e; font-size: 12px; text-transform: uppercase;
+                letter-spacing: 1px; margin-bottom: 6px; }
+.metric-value { color: #e6edf3; font-size: 26px; font-weight: 700; }
+.metric-sub   { color: #58a6ff; font-size: 13px; margin-top: 4px; }
+.bracket-match { background:#161b22; border:1px solid #30363d; border-radius:6px;
+                 padding:6px 10px; margin:3px 0; font-size:13px; }
+.bracket-winner { border-left: 3px solid #238636 !important; }
 </style>
 """, unsafe_allow_html=True)
 
 
 # \\\\\\\\\\\
-# Sidebar: configuración
+# Sidebar
 # \\\\\\\\\\\
-
 with st.sidebar:
-    st.title("⚽ Configuración")
+    st.markdown("## ⚽ Simulador")
     st.markdown("---")
-    n_sims = st.slider("Simulaciones", 100, 10000, 1000, 100)
-    seed   = st.number_input("Semilla aleatoria", 0, 9999, 42)
-
+    n_sims = st.slider("Simulaciones", 500, 10000, 2000, 500)
+    seed   = st.number_input("Semilla", 0, 9999, 42)
     st.markdown("---")
-    st.markdown("**Escenario: simular sin un equipo**")
+    st.markdown("**Escenario**")
     try:
-        td       = load_tournament_data()
-        all_teams = ["(ninguno)"] + sorted(td["team"].tolist())
+        td_side   = load_tournament_data()
+        team_opts = ["(torneo completo)"] + sorted(td_side["team"].tolist())
     except Exception:
-        all_teams = ["(ninguno)"]
-    exclude = st.selectbox("Excluir equipo", all_teams)
-    exclude_team = None if exclude == "(ninguno)" else exclude
-
+        team_opts = ["(torneo completo)"]
+    exclude = st.selectbox("Simular sin equipo", team_opts)
+    exclude_team = None if exclude == "(torneo completo)" else exclude
     st.markdown("---")
-    run_btn = st.button("▶ Ejecutar simulación", type="primary", use_container_width=True)
-    st.caption("Modelo: Dixon-Coles + factores contextuales")
-    st.caption("Datos: ClubElo · SoFIFA · FIFA Ranking")
-
-
-st.title("🌍 World Cup 2026 — Monte Carlo Simulator")
-st.markdown("Simulador probabilístico basado en el modelo **Dixon-Coles** con datos reales.")
-st.markdown("---")
+    run_btn = st.button("▶ Ejecutar simulación")
+    st.markdown("")
+    st.markdown("<small style='color:#8b949e'>Modelo Dixon-Coles · Datos FIFA jun 2026</small>", unsafe_allow_html=True)
 
 
 # \\\\\\\\\\\
-# Carga o ejecución de resultados
+# Carga o ejecución
 # \\\\\\\\\\\
-
 @st.cache_data
 def load_saved():
     p = lambda f: OUTPUTS_DIR / f
-    if not p("team_probabilities.csv").exists():
-        return None
+    if not p("team_probabilities.csv").exists(): return None
     tp = pd.read_csv(p("team_probabilities.csv"))
-    # Compatibilidad v1: renombrar columnas antiguas
     tp = tp.rename(columns={
-        "champion_probability":     "champion_pct",
-        "finalist_probability":     "reach_final_pct",
-        "semifinalist_probability": "reach_semis_pct",
-        "quarterfinalist_prob":     "reach_quarters_pct",
-        "round_of_16_probability":  "reach_round16_pct",
-        "round_of_32_probability":  "reach_round32_pct",
-        "group_exit_probability":   "group_exit_pct",
+        "champion_probability":"champion_pct","finalist_probability":"reach_final_pct",
+        "semifinalist_probability":"reach_semis_pct","quarterfinalist_prob":"reach_quarters_pct",
+        "round_of_16_probability":"reach_round16_pct","round_of_32_probability":"reach_round32_pct",
+        "group_exit_probability":"group_exit_pct",
     })
-    for col in ["pass_group_stage_pct","reach_round32_pct","reach_round16_pct",
-                "reach_quarters_pct","attack_coef","defense_coef"]:
+    for col in ["pass_group_stage_pct","reach_round32_pct","reach_round16_pct","reach_quarters_pct","attack_coef","defense_coef"]:
         if col not in tp.columns:
-            tp[col] = (100 - tp["group_exit_pct"]).round(2) if col == "pass_group_stage_pct" and "group_exit_pct" in tp.columns else 0.0
+            tp[col] = (100-tp["group_exit_pct"]).round(2) if col=="pass_group_stage_pct" and "group_exit_pct" in tp.columns else 0.0
     return {
         "team_probabilities": tp,
         "finals":             pd.read_csv(p("finals.csv")),
@@ -100,30 +96,28 @@ def load_saved():
     }
 
 if run_btn:
-    with st.spinner(f"Ejecutando {n_sims:,} simulaciones (Dixon-Coles)..."):
-        res = run_monte_carlo(n_simulations=n_sims, seed=seed,
-                              verbose=False, exclude_team=exclude_team)
+    with st.spinner(f"Ejecutando {n_sims:,} simulaciones…"):
+        res = run_monte_carlo(n_simulations=n_sims, seed=seed, verbose=False, exclude_team=exclude_team)
         generate_all_charts(res["team_probabilities"], res["group_summary"],
                             res["third_place_stats"], res["variance_table"])
-    label = f"✅ {n_sims:,} simulaciones completadas"
-    if exclude_team:
-        label += f" (sin {exclude_team})"
-    st.success(label)
     st.cache_data.clear()
-    data = {k: res[k] for k in ["team_probabilities","finals","group_summary",
-                                  "third_place_stats","path_to_title","variance_table"]}
+    label = f"✅ {n_sims:,} simulaciones completadas"
+    if exclude_team: label += f" (sin {exclude_team})"
+    st.success(label)
+    data = {k: res[k] for k in ["team_probabilities","finals","group_summary","third_place_stats","path_to_title","variance_table"]}
 else:
     data = load_saved()
 
 if data is None:
-    st.info("👈 Pulsa **Ejecutar simulación** para comenzar.")
+    st.title("🌍 World Cup 2026 — Monte Carlo Simulator")
+    st.info("👈 Configura y pulsa **Ejecutar simulación** para comenzar.")
     try:
-        df = load_tournament_data()
-        st.subheader("Equipos del torneo")
-        st.dataframe(df[["group","team","confederation","overall_rating","is_host"]],
-                     use_container_width=True, height=380)
-    except Exception:
-        pass
+        td = load_tournament_data()
+        st.subheader("Equipos del Mundial 2026")
+        for g, gdf in td.groupby("group"):
+            with st.expander(f"Grupo {g}"):
+                st.dataframe(gdf[["team","overall_rating"]].sort_values("overall_rating",ascending=False), use_container_width=True)
+    except Exception: pass
     st.stop()
 
 tp      = data["team_probabilities"]
@@ -133,138 +127,248 @@ thirds  = data["third_place_stats"]
 path_df = data["path_to_title"]
 var_df  = data["variance_table"]
 
-# \\\\\\\\\\\
-# Métricas resumen
-# \\\\\\\\\\\
 
-top   = tp.iloc[0]
+# \\\\\\\\\\\
+# Header y métricas top
+# \\\\\\\\\\\
+st.title("🌍 World Cup 2026 — Monte Carlo Simulator")
+
+top  = tp.iloc[0]
+fin1 = tp.sort_values("reach_final_pct", ascending=False).iloc[0]
+topf = finals.iloc[0] if not finals.empty else None
+hardg = gs.iloc[0]   if not gs.empty else None
+
 c1, c2, c3, c4 = st.columns(4)
-with c1: st.metric("🏆 Gran favorito", top["team"], f"{top['champion_pct']}%")
-with c2:
-    tf = tp.sort_values("reach_final_pct", ascending=False).iloc[0]
-    st.metric("🥈 Más veces finalista", tf["team"], f"{tf['reach_final_pct']}%")
-with c3:
-    if not finals.empty:
-        st.metric("🎯 Final más probable", finals.iloc[0]["final"], f"{finals.iloc[0]['probability_pct']}%")
-with c4:
-    if not gs.empty:
-        hg = gs.iloc[0]
-        st.metric("💀 Grupo más duro", f"Grupo {hg['group']}", f"Rating {hg['average_rating']}")
+def mcard(col, icon, title, val, sub=""):
+    col.markdown(f"""<div class="metric-card">
+        <div class="metric-title">{icon} {title}</div>
+        <div class="metric-value">{val}</div>
+        <div class="metric-sub">{sub}</div>
+    </div>""", unsafe_allow_html=True)
 
-st.markdown("---")
+mcard(c1, "🏆", "Gran favorito",    top["team"],  f"{top['champion_pct']:.1f}% campeón")
+mcard(c2, "🥈", "Más veces finalista", fin1["team"], f"{fin1['reach_final_pct']:.1f}% llega a la final")
+mcard(c3, "🎯", "Final más probable", topf["final"].replace(" vs ","\nvs ") if topf is not None else "—",
+      f"{topf['probability_pct']:.1f}%" if topf is not None else "")
+mcard(c4, "💀", "Grupo más difícil", f"Grupo {hardg['group']}" if hardg is not None else "—",
+      f"Rating medio {hardg['average_rating']}" if hardg is not None else "")
+
+st.markdown("<br>", unsafe_allow_html=True)
+
 
 # \\\\\\\\\\\
-# Tabs del dashboard
+# Tabs
 # \\\\\\\\\\\
-
-tabs = st.tabs([
-    "📊 Probabilidades", "📈 Por fase", "🎯 Finales",
-    "🗂 Grupos", "3️⃣ Terceros", "📉 Varianza",
-    "🛣 Camino al título", "🔀 Escenarios", "🖼 Gráficos", "📝 Conclusiones"
-])
+tabs = st.tabs(["🏆 Favoritos", "🗂 Grupos", "📊 Por fase", "🎯 Finales",
+                "3️⃣ Media puntos terceros", "🛣 Camino al título",
+                "📉 Varianza", "🖼 Gráficos"])
 
 
-# --- Tab 1: Probabilidades generales ---
+# ─────────────────────────────────────────────
+# TAB 1: FAVORITOS (tabla limpia sin confederaciones)
+# ─────────────────────────────────────────────
 with tabs[0]:
-    st.subheader("Probabilidades generales por selección")
-    c1, c2 = st.columns(2)
-    with c1:
-        conf_f = st.multiselect("Confederación", sorted(tp["confederation"].unique()), key="conf1")
-    with c2:
-        grp_f  = st.multiselect("Grupo", sorted(tp["group"].unique()), key="grp1")
+    st.subheader("Probabilidades de campeonato")
+
+    col_f1, col_f2 = st.columns([1,1])
+    with col_f1:
+        grp_f = st.multiselect("Filtrar por grupo", sorted(tp["group"].unique()), key="grp_fav")
+    with col_f2:
+        top_n = st.slider("Mostrar top N equipos", 10, 48, 20, key="topn_fav")
 
     filt = tp.copy()
-    if conf_f: filt = filt[filt["confederation"].isin(conf_f)]
-    if grp_f:  filt = filt[filt["group"].isin(grp_f)]
+    if grp_f: filt = filt[filt["group"].isin(grp_f)]
+    filt = filt.head(top_n)
 
-    cols_map = {
-        "team": "Selección", "group": "Grupo", "confederation": "Conf.",
-        "overall_rating": "Rating",
-        "champion_pct": "Campeón %", "reach_final_pct": "Final %",
-        "reach_semis_pct": "Semis %", "reach_quarters_pct": "Cuartos %",
-        "pass_group_stage_pct": "Pasa grupos %", "group_exit_pct": "Eliminado grupos %",
-    }
-    disp = filt[list(cols_map)].rename(columns=cols_map)
-    st.dataframe(disp.style.background_gradient(subset=["Campeón %"], cmap="Greens"),
-                 use_container_width=True, height=480)
-    st.download_button("⬇ Descargar CSV", tp.to_csv(index=False).encode(),
-                       "team_probabilities.csv", "text/csv")
-
-
-# --- Tab 2: Probabilidades por fase ---
-with tabs[1]:
-    st.subheader("Probabilidad de alcanzar cada fase del torneo")
-
-    team_sel = st.selectbox("Seleccionar equipo", tp["team"].tolist(), key="team_phase")
-    row = tp[tp["team"] == team_sel].iloc[0]
-
-    phases = {
-        "Pasa grupos": row["pass_group_stage_pct"],
-        "Dieciseisavos": row["reach_round32_pct"],
-        "Octavos":        row["reach_round16_pct"],
-        "Cuartos":        row["reach_quarters_pct"],
-        "Semis":          row["reach_semis_pct"],
-        "Final":          row["reach_final_pct"],
-        "Campeón":        row["champion_pct"],
-    }
-    phase_df = pd.DataFrame({"Fase": list(phases.keys()), "Probabilidad (%)": list(phases.values())})
-
-    fig, ax = plt.subplots(figsize=(9, 4))
-    fig.patch.set_facecolor("#0D1117"); ax.set_facecolor("#161B22")
-    colors = plt.cm.YlOrRd(np.linspace(0.3, 0.9, len(phase_df)))
-    bars = ax.bar(phase_df["Fase"], phase_df["Probabilidad (%)"],
-                  color=colors, edgecolor="none")
-    for bar, val in zip(bars, phase_df["Probabilidad (%)"]):
-        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5,
-                f"{val:.1f}%", ha="center", va="bottom", fontsize=9, color="#E6EDF3")
-    ax.set_ylabel("Probabilidad (%)", color="#E6EDF3")
-    ax.tick_params(colors="#E6EDF3"); ax.spines[:].set_visible(False)
-    ax.grid(axis="y", alpha=0.2, color="#21262D")
-    ax.set_title(f"Probabilidades de {team_sel} por fase", color="#E6EDF3", pad=10)
+    # Gráfico horizontal limpio
+    fig, ax = plt.subplots(figsize=(10, max(4, len(filt)*0.4)))
+    fig.patch.set_facecolor("#0d1117"); ax.set_facecolor("#161b22")
+    colors = ["#238636" if i==0 else "#1f6feb" if i<3 else "#388bfd" if i<8 else "#8b949e"
+              for i in range(len(filt))]
+    bars = ax.barh(filt["team"], filt["champion_pct"], color=colors[::-1], edgecolor="none")
+    for bar, val in zip(bars, filt["champion_pct"].values[::-1]):
+        if val > 0:
+            ax.text(bar.get_width()+0.1, bar.get_y()+bar.get_height()/2,
+                    f"{val:.1f}%", va="center", ha="left", fontsize=8.5, color="#e6edf3")
+    ax.set_xlabel("Probabilidad de ser campeón (%)", color="#8b949e", fontsize=10)
+    ax.tick_params(colors="#e6edf3", labelsize=9)
+    ax.spines[:].set_visible(False)
+    ax.grid(axis="x", alpha=0.15, color="#30363d")
+    ax.set_xlim(0, filt["champion_pct"].max()*1.3)
+    fig.tight_layout(pad=1.5)
     st.pyplot(fig); plt.close(fig)
 
-    st.dataframe(phase_df, use_container_width=True)
+    # Tabla limpia
+    display = filt[["team","group","overall_rating","champion_pct","reach_final_pct",
+                     "reach_semis_pct","reach_quarters_pct","pass_group_stage_pct","group_exit_pct"]].copy()
+    display.columns = ["Selección","Grupo","Rating","Campeón %","Final %",
+                       "Semis %","Cuartos %","Pasa grupos %","Eliminado grupos %"]
+    display = display.reset_index(drop=True)
+    display.index += 1
+    st.dataframe(display.style
+        .background_gradient(subset=["Campeón %"], cmap="Greens")
+        .background_gradient(subset=["Eliminado grupos %"], cmap="Reds_r")
+        .format({"Rating":"{:.1f}","Campeón %":"{:.1f}","Final %":"{:.1f}",
+                 "Semis %":"{:.1f}","Cuartos %":"{:.1f}",
+                 "Pasa grupos %":"{:.1f}","Eliminado grupos %":"{:.1f}"}),
+        use_container_width=True, height=500)
+
+    st.download_button("⬇ Descargar CSV", tp.to_csv(index=False).encode(), "probabilidades.csv", "text/csv")
 
 
-# --- Tab 3: Finales ---
-with tabs[2]:
-    st.subheader("Finales más repetidas en las simulaciones")
-    if finals.empty:
-        st.info("Sin datos.")
-    else:
-        top10 = finals.head(10).sort_values("probability_pct")
-        fig, ax = plt.subplots(figsize=(9, 5))
-        fig.patch.set_facecolor("#0D1117"); ax.set_facecolor("#161B22")
-        ax.barh(top10["final"], top10["probability_pct"], color="#DA3633", edgecolor="none")
-        ax.set_xlabel("Frecuencia (%)", color="#E6EDF3")
-        ax.tick_params(colors="#E6EDF3"); ax.spines[:].set_visible(False)
-        ax.grid(axis="x", alpha=0.2, color="#21262D")
-        ax.set_title("Top 10 finales más frecuentes", color="#E6EDF3", pad=10)
-        st.pyplot(fig); plt.close(fig)
-        st.dataframe(finals, use_container_width=True)
+# ─────────────────────────────────────────────
+# TAB 2: GRUPOS DESGLOSADOS
+# ─────────────────────────────────────────────
+with tabs[1]:
+    st.subheader("Grupos del Mundial 2026")
 
-
-# --- Tab 4: Grupos ---
-with tabs[3]:
-    st.subheader("Dificultad de grupos")
-    if not gs.empty:
-        st.dataframe(gs.style.background_gradient(subset=["average_rating"], cmap="RdYlGn_r"),
-                     use_container_width=True)
-    st.markdown("#### Desglose por grupo")
     try:
-        td2 = load_tournament_data()
-        for g, gdf in td2.groupby("group"):
-            with st.expander(f"Grupo {g}"):
-                st.dataframe(gdf[["team","confederation","overall_rating",
-                                   "attack_coef","defense_coef","is_host"]],
-                             use_container_width=True)
+        td = load_tournament_data()
     except Exception:
-        pass
+        td = None
+
+    if td is not None:
+        # Dificultad general
+        st.markdown("#### Dificultad de grupos por rating medio")
+        fig2, ax2 = plt.subplots(figsize=(11, 4))
+        fig2.patch.set_facecolor("#0d1117"); ax2.set_facecolor("#161b22")
+        gs_sorted = gs.sort_values("average_rating", ascending=False)
+        q75 = gs_sorted["average_rating"].quantile(0.75)
+        cols_g = ["#da3633" if r>=q75 else "#388bfd" for r in gs_sorted["average_rating"]]
+        bars2 = ax2.bar([f"Grupo {g}" for g in gs_sorted["group"]],
+                        gs_sorted["average_rating"], color=cols_g, edgecolor="none", width=0.6)
+        for bar, val in zip(bars2, gs_sorted["average_rating"]):
+            ax2.text(bar.get_x()+bar.get_width()/2, bar.get_height()+0.3,
+                     f"{val:.1f}", ha="center", fontsize=9, color="#e6edf3")
+        ax2.set_ylim(gs_sorted["average_rating"].min()*0.93, gs_sorted["average_rating"].max()*1.06)
+        ax2.tick_params(colors="#8b949e"); ax2.spines[:].set_visible(False)
+        ax2.grid(axis="y", alpha=0.15, color="#30363d")
+        red_p = mpatches.Patch(color="#da3633", label="Grupos más duros")
+        blue_p = mpatches.Patch(color="#388bfd", label="Grupos accesibles")
+        ax2.legend(handles=[red_p, blue_p], facecolor="#161b22", labelcolor="#e6edf3", fontsize=9)
+        fig2.tight_layout(pad=1.5)
+        st.pyplot(fig2); plt.close(fig2)
+
+        st.markdown("#### Probabilidades por grupo (% de clasificarse 1°, 2° y como mejor 3°)")
+        group_list = sorted(td["group"].unique())
+        cols_per_row = 3
+        for row_start in range(0, len(group_list), cols_per_row):
+            row_groups = group_list[row_start:row_start+cols_per_row]
+            cols_g2 = st.columns(len(row_groups))
+            for col_g, grp in zip(cols_g2, row_groups):
+                with col_g:
+                    st.markdown(f"**Grupo {grp}**")
+                    teams_in_grp = td[td["group"]==grp]["team"].tolist()
+                    grp_probs = tp[tp["group"]==grp][["team","overall_rating","champion_pct",
+                                                       "pass_group_stage_pct","group_exit_pct"]].copy()
+                    grp_probs = grp_probs.sort_values("overall_rating", ascending=False)
+                    grp_probs.columns = ["Equipo","Rating","Campeón %","Pasa %","Elim %"]
+                    grp_probs = grp_probs.reset_index(drop=True)
+                    grp_probs.index +=1
+                    st.dataframe(grp_probs.style.format(
+                        {"Rating":"{:.1f}","Campeón %":"{:.1f}","Pasa %":"{:.1f}","Elim %":"{:.1f}"}),
+                        use_container_width=True)
 
 
-# --- Tab 5: Puntos de los terceros ---
+# ─────────────────────────────────────────────
+# TAB 3: PROBABILIDAD POR FASE — selección concreta
+# ─────────────────────────────────────────────
+with tabs[2]:
+    st.subheader("Probabilidad de alcanzar cada fase")
+
+    team_sel = st.selectbox("Selección", tp["team"].tolist(), key="sel_phase")
+    row = tp[tp["team"]==team_sel].iloc[0]
+
+    phases = {
+        "Pasa grupos":   row["pass_group_stage_pct"],
+        "Dieciseisavos": row.get("reach_round32_pct", 0),
+        "Octavos":       row.get("reach_round16_pct", 0),
+        "Cuartos":       row["reach_quarters_pct"],
+        "Semis":         row["reach_semis_pct"],
+        "Final":         row["reach_final_pct"],
+        "Campeón":       row["champion_pct"],
+    }
+
+    fig3, ax3 = plt.subplots(figsize=(9, 4))
+    fig3.patch.set_facecolor("#0d1117"); ax3.set_facecolor("#161b22")
+    phase_vals = list(phases.values())
+    phase_keys = list(phases.keys())
+    gradient = plt.cm.YlOrRd(np.linspace(0.25, 0.9, len(phase_vals)))
+    bars3 = ax3.bar(phase_keys, phase_vals, color=gradient, edgecolor="none", width=0.6)
+    for bar, val in zip(bars3, phase_vals):
+        ax3.text(bar.get_x()+bar.get_width()/2, bar.get_height()+0.5,
+                 f"{val:.1f}%", ha="center", va="bottom", fontsize=9, color="#e6edf3")
+    ax3.set_ylabel("%", color="#8b949e"); ax3.tick_params(colors="#8b949e")
+    ax3.spines[:].set_visible(False)
+    ax3.grid(axis="y", alpha=0.15, color="#30363d")
+    ax3.set_title(f"Probabilidades de {team_sel} por fase", color="#e6edf3", pad=12, fontsize=12)
+    fig3.tight_layout(pad=1.5)
+    st.pyplot(fig3); plt.close(fig3)
+
+    c_a, c_b, c_c = st.columns(3)
+    c_a.metric("Rating compuesto", f"{row['overall_rating']:.1f}")
+    c_b.metric("Grupo", row["group"])
+    c_c.metric("Probabilidad campeón", f"{row['champion_pct']:.2f}%")
+
+
+# ─────────────────────────────────────────────
+# TAB 4: FINALES + BRACKET MÁS COMÚN
+# ─────────────────────────────────────────────
+with tabs[3]:
+    st.subheader("Finales más repetidas y bracket más probable")
+
+    col_left, col_right = st.columns([1, 1])
+
+    with col_left:
+        st.markdown("#### Top 15 finales")
+        if not finals.empty:
+            top15 = finals.head(15).sort_values("probability_pct")
+            fig4, ax4 = plt.subplots(figsize=(7, 6))
+            fig4.patch.set_facecolor("#0d1117"); ax4.set_facecolor("#161b22")
+            ax4.barh(top15["final"], top15["probability_pct"], color="#da3633", edgecolor="none", height=0.6)
+            for _, row_f in top15.iterrows():
+                ax4.text(row_f["probability_pct"]+0.03, top15.index.get_loc(row_f.name),
+                         f"{row_f['probability_pct']:.2f}%", va="center", fontsize=8, color="#e6edf3")
+            ax4.set_xlabel("Frecuencia (%)", color="#8b949e")
+            ax4.tick_params(colors="#8b949e", labelsize=8)
+            ax4.spines[:].set_visible(False)
+            ax4.grid(axis="x", alpha=0.15, color="#30363d")
+            fig4.tight_layout(pad=1.5)
+            st.pyplot(fig4); plt.close(fig4)
+
+    with col_right:
+        st.markdown("#### Bracket más probable")
+        if not path_df.empty:
+            top3 = path_df.head(3)
+            round_cols = [c for c in path_df.columns if "_rival" in c]
+            round_labels = [c.replace("_rival","") for c in round_cols]
+
+            for _, prow in top3.iterrows():
+                st.markdown(f"**{prow['team']}** ({prow['champion_pct']:.1f}% campeón)")
+                bracket_html = ""
+                for rc in round_cols:
+                    rnd = rc.replace("_rival","")
+                    rival = prow.get(rc, "—")
+                    freq_col = rc.replace("_rival","_freq_pct")
+                    freq = prow.get(freq_col, 0)
+                    bracket_html += f"""<div class="bracket-match bracket-winner">
+                        <span style="color:#8b949e;font-size:11px">{rnd}</span>
+                        <span style="color:#e6edf3;margin-left:8px">vs {rival}</span>
+                        <span style="color:#58a6ff;float:right;font-size:11px">{freq:.0f}%</span>
+                    </div>"""
+                bracket_html += f"""<div class="bracket-match" style="background:#0d1117;border-color:#238636">
+                    <span style="color:#238636;font-weight:700">🏆 CAMPEÓN</span>
+                    <span style="color:#238636;float:right">{prow['champion_pct']:.1f}%</span>
+                </div>"""
+                st.markdown(bracket_html, unsafe_allow_html=True)
+                st.markdown("")
+
+
+# ─────────────────────────────────────────────
+# TAB 5: MEDIA DE PUNTOS TERCEROS
+# ─────────────────────────────────────────────
 with tabs[4]:
-    st.subheader("¿Con cuántos puntos se clasifican los terceros de grupo?")
+    st.subheader("¿Con cuántos puntos te clasificas siendo tercero?")
 
     if thirds.empty:
         st.info("Ejecuta la simulación para ver esta información.")
@@ -273,128 +377,119 @@ with tabs[4]:
         detail  = thirds[~thirds["categoria"].str.startswith("RESUMEN")]
 
         if not summary.empty:
-            st.markdown("#### Estadísticas de los mejores terceros clasificados")
-            for _, r in summary.iterrows():
-                label = r["categoria"].replace("RESUMEN - ", "")
-                val   = r["puntos"]
-                st.metric(label, f"{val} puntos")
+            s_cols = st.columns(len(summary))
+            for i, (_, sr) in enumerate(summary.iterrows()):
+                label = sr["categoria"].replace("RESUMEN - ","")
+                with s_cols[i]:
+                    st.metric(label, f"{sr['puntos']:.2f} pts" if "Clasificados"==label else f"{int(sr['puntos'])} pts")
 
-        st.markdown("#### Distribución de puntos")
-        img = OUTPUTS_DIR / "third_place_points.png"
-        if img.exists():
-            st.image(str(img), use_column_width=True)
+        st.markdown("---")
+        st.markdown("#### Distribución de puntos: clasificados vs eliminados")
 
-        st.markdown("#### Datos completos")
-        if not detail.empty:
-            pivot = detail.pivot_table(
-                index="puntos", columns="categoria",
-                values="frecuencia_pct", aggfunc="sum"
-            ).fillna(0)
-            st.dataframe(pivot, use_container_width=True)
+        img_path = OUTPUTS_DIR / "third_place_points.png"
+        if img_path.exists():
+            st.image(str(img_path), use_column_width=True)
+        elif not detail.empty:
+            fig5, ax5 = plt.subplots(figsize=(8, 4))
+            fig5.patch.set_facecolor("#0d1117"); ax5.set_facecolor("#161b22")
+            for cat, color in [("Clasificado (top 8)","#238636"),("Eliminado","#da3633")]:
+                sub = detail[detail["categoria"]==cat]
+                if not sub.empty:
+                    ax5.bar(sub["puntos"].astype(str), sub["frecuencia_pct"],
+                            label=cat, color=color, alpha=0.85, edgecolor="none")
+            ax5.legend(facecolor="#161b22", labelcolor="#e6edf3")
+            ax5.tick_params(colors="#8b949e"); ax5.spines[:].set_visible(False)
+            ax5.grid(axis="y", alpha=0.15, color="#30363d")
+            fig5.tight_layout(); st.pyplot(fig5); plt.close(fig5)
 
-        st.info(
-            "**Lectura:** un tercer clasificado necesita típicamente **4-6 puntos** "
-            "para entrar entre los 8 mejores. Con 3 puntos hay opciones pero no garantía. "
-            "Con 7+ puntos la clasificación es casi segura."
-        )
+        st.info("📌 Con **4 o más puntos** la clasificación como mejor tercero es muy probable. "
+                "Con **3 puntos** depende de los otros grupos. Con **2 o menos** prácticamente imposible.")
 
 
-# --- Tab 6: Varianza ---
+# ─────────────────────────────────────────────
+# TAB 6: CAMINO AL TÍTULO
+# ─────────────────────────────────────────────
 with tabs[5]:
-    st.subheader("Varianza y consistencia por equipo")
-    st.markdown("""
-    - **Índice de consistencia alto** → el equipo llega lejos en casi todas las simulaciones.
-    - **Índice de varianza alto** → alto potencial de campeón pero también de caer en grupos.
-    """)
-
-    img_scatter = OUTPUTS_DIR / "variance_scatter.png"
-    if img_scatter.exists():
-        st.image(str(img_scatter), use_column_width=True)
-
-    if not var_df.empty:
-        st.dataframe(
-            var_df.style.background_gradient(subset=["consistency_index"], cmap="Greens")
-                        .background_gradient(subset=["variance_index"], cmap="Reds"),
-            use_container_width=True
-        )
-
-
-# --- Tab 7: Camino al título ---
-with tabs[6]:
     st.subheader("Camino más probable al título")
-    st.markdown("Muestra el rival más frecuente de cada equipo en cada ronda cuando ese equipo gana.")
+    st.caption("Muestra el rival más frecuente en cada ronda cuando ese equipo gana el torneo.")
 
     if path_df.empty:
-        st.info("Sin datos. Ejecuta la simulación.")
+        st.info("Sin datos.")
     else:
-        n_show = st.slider("Equipos a mostrar", 5, min(20, len(path_df)), 10, key="path_slider")
-        show = path_df.head(n_show)
-        st.dataframe(show, use_container_width=True)
+        n_show = st.slider("Equipos a mostrar", 3, min(15, len(path_df)), 8, key="path_n")
+        show   = path_df.head(n_show)
 
-        # Vista detallada de un equipo
-        team_path = st.selectbox("Ver camino de", path_df["team"].tolist(), key="path_team")
-        row_p = path_df[path_df["team"] == team_path]
-        if not row_p.empty:
-            row_p = row_p.iloc[0]
-            st.markdown(f"#### Camino típico de {team_path} al título ({row_p['champion_pct']}% de ser campeón)")
-            rondas = ["Dieciseisavos", "Octavos", "Cuartos", "Semifinal"]
-            cols = st.columns(4)
-            for i, rnd in enumerate(rondas):
-                rival_col = f"{rnd}_rival"
-                freq_col  = f"{rnd}_freq_pct"
-                if rival_col in row_p.index:
-                    with cols[i]:
-                        st.metric(rnd, row_p[rival_col], f"{row_p[freq_col]}% de las veces")
+        round_rivals = [c for c in show.columns if "_rival" in c]
+        round_freqs  = [c for c in show.columns if "_freq_pct" in c]
+        round_names  = [c.replace("_rival","") for c in round_rivals]
+
+        for _, prow in show.iterrows():
+            with st.expander(f"🏆 {prow['team']} — {prow['champion_pct']:.1f}% de ser campeón"):
+                path_cols = st.columns(len(round_rivals)+1)
+                for i, (rc, rn) in enumerate(zip(round_rivals, round_names)):
+                    fc = rc.replace("_rival","_freq_pct")
+                    rival = prow.get(rc,"—")
+                    freq  = prow.get(fc, 0)
+                    path_cols[i].metric(rn, rival, f"{freq:.0f}% de las veces")
+                path_cols[-1].metric("🏆 Final", "CAMPEÓN", f"{prow['champion_pct']:.1f}%")
 
 
-# --- Tab 8: Escenarios ---
+# ─────────────────────────────────────────────
+# TAB 7: VARIANZA
+# ─────────────────────────────────────────────
+with tabs[6]:
+    st.subheader("Varianza y consistencia por equipo")
+
+    c_info1, c_info2 = st.columns(2)
+    with c_info1:
+        st.info("🟢 **Consistencia alta** → llega lejos en casi todas las simulaciones, pocas sorpresas.")
+    with c_info2:
+        st.info("🔴 **Varianza alta** → potencial de campeón pero también puede caer pronto.")
+
+    img_var = OUTPUTS_DIR / "variance_scatter.png"
+    if img_var.exists():
+        st.image(str(img_var), use_column_width=True)
+
+    if not var_df.empty:
+        st.markdown("#### Tabla de consistencia")
+        disp_var = var_df[["team","group","overall_rating","champion_pct",
+                            "reach_semis_pct","group_exit_pct","consistency_index","variance_index"]].copy()
+        disp_var.columns = ["Selección","Grupo","Rating","Campeón %","Semis %",
+                             "Elim grupos %","Consistencia","Varianza"]
+        disp_var = disp_var.reset_index(drop=True); disp_var.index+=1
+        st.dataframe(disp_var.style
+            .background_gradient(subset=["Consistencia"], cmap="Greens")
+            .background_gradient(subset=["Varianza"], cmap="Reds")
+            .format({"Rating":"{:.1f}","Campeón %":"{:.1f}","Semis %":"{:.1f}",
+                     "Elim grupos %":"{:.1f}","Consistencia":"{:.2f}","Varianza":"{:.2f}"}),
+            use_container_width=True)
+
+
+# ─────────────────────────────────────────────
+# TAB 8: GRÁFICOS
+# ─────────────────────────────────────────────
 with tabs[7]:
-    st.subheader("Análisis de escenarios")
-    st.markdown(
-        "Usa el panel izquierdo para **excluir un equipo** del torneo y comparar "
-        "cómo cambian las probabilidades del resto. Útil para analizar el impacto "
-        "de una baja importante o comparar mundiales alternativos."
-    )
-
-    if exclude_team:
-        st.info(f"La última simulación se ejecutó **sin {exclude_team}**. "
-                "Los resultados de las demás pestañas reflejan ese escenario.")
-    else:
-        st.info("Selecciona un equipo en el sidebar y ejecuta la simulación para ver el escenario.")
-
-    st.markdown("#### Top 10 favoritos al título")
-    if not tp.empty:
-        top10 = tp.head(10)[["team", "group", "champion_pct", "reach_semis_pct", "group_exit_pct"]]
-        st.dataframe(top10, use_container_width=True)
-
-
-# --- Tab 9: Gráficos ---
-with tabs[8]:
     st.subheader("Visualizaciones")
+
     imgs = [
-        ("champion_probabilities.png", "Probabilidad de ser Campeón"),
-        ("semifinal_probabilities.png", "Probabilidad de llegar a Semifinales"),
-        ("phase_heatmap.png", "Heatmap de probabilidades por fase"),
-        ("variance_scatter.png", "Varianza — Potencial vs Inconsistencia"),
-        ("group_difficulty.png", "Dificultad de grupos"),
-        ("third_place_points.png", "Puntos de los terceros clasificados"),
+        ("champion_probabilities.png",  "Probabilidad de ser campeón"),
+        ("phase_heatmap.png",           "Heatmap de probabilidades por fase"),
+        ("semifinal_probabilities.png", "Probabilidad de llegar a semifinales"),
+        ("variance_scatter.png",        "Varianza: potencial vs inconsistencia"),
+        ("group_difficulty.png",        "Dificultad de grupos"),
+        ("third_place_points.png",      "Puntos de los terceros clasificados"),
     ]
+    shown = 0
     for fname, caption in imgs:
         p = OUTPUTS_DIR / fname
         if p.exists():
             st.image(str(p), caption=caption, use_column_width=True)
             st.markdown("")
+            shown += 1
 
-    if st.button("🔄 Regenerar gráficos"):
-        generate_all_charts(tp, gs, thirds, var_df)
-        st.success("Regenerados."); st.rerun()
-
-
-# --- Tab 10: Conclusiones ---
-with tabs[9]:
-    st.subheader("Conclusiones automáticas")
-    path_c = OUTPUTS_DIR / "conclusions.txt"
-    if path_c.exists():
-        st.code(open(path_c, encoding="utf-8").read(), language=None)
+    if shown == 0:
+        st.info("Ejecuta la simulación para generar los gráficos.")
     else:
-        st.info("Ejecuta la simulación para generar las conclusiones.")
+        if st.button("🔄 Regenerar gráficos"):
+            generate_all_charts(tp, gs, thirds, var_df)
+            st.success("Regenerados."); st.rerun()

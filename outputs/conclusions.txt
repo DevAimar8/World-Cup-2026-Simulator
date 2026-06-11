@@ -3,48 +3,48 @@
 =================================================================
 
 1. GRAN FAVORITO AL TÍTULO
-   Argentina con 20.0% de probabilidad.
-   Rating compuesto: 89.5
+   Spain con 17.5% de probabilidad.
+   Rating compuesto: 88.5
 
 2. EQUIPO MÁS VECES EN LA FINAL
-   Portugal llega a la final en el 16.67% de simulaciones.
+   Brazil llega a la final en el 12.5% de simulaciones.
 
 3. EQUIPO MÁS CONSISTENTE (llega lejos sin grandes altibajos)
-   Argentina — índice de consistencia: 4.35
-   Semis: 33.33% | Eliminado en grupos: 6.67%
+   Spain — índice de consistencia: 37.50
+   Semis: 37.5% | Eliminado en grupos: 0.0%
 
 4. MAYOR VARIANZA — EQUIPO MÁS IMPREDECIBLE
-   USA puede ganarlo todo o caer en grupos.
-   Campeón: 10.0% | Eliminado grupos: 36.67%
+   Sweden puede ganarlo todo o caer en grupos.
+   Campeón: 5.0% | Eliminado grupos: 30.0%
 
 5. MEDIA DE PUNTOS PARA CLASIFICARSE COMO TERCER
-   Clasificados: 3.71
-   Mínimo clasificado: 2.0
+   Clasificados: 3.63
+   Mínimo clasificado: 3.0
    Máximo clasificado: 6.0
    Máximo eliminado: 3.0
 
 6. GRUPOS
-   Más difícil: Grupo F (rating medio 70.9)
+   Más difícil: Grupo F (rating medio 70.1)
    → Netherlands / Japan / Sweden / Tunisia
-   Más accesible: Grupo B (rating medio 60.8)
+   Más accesible: Grupo B (rating medio 59.6)
    → Canada / Bosnia Herzegovina / Qatar / Switzerland
 
 7. FINAL MÁS PROBABLE
-   Argentina vs Portugal — ocurre en el 6.67% de simulaciones.
+   Portugal vs Spain — ocurre en el 5.0% de simulaciones.
 
 8. POSIBLES SORPRESAS (rating < 80, llegan a cuartos en >5% de simulaciones)
-   USA: 30.0% cuartos | rating 74.3
-   Colombia: 26.67% cuartos | rating 78.0
-   Norway: 30.0% cuartos | rating 71.2
-   Czech Republic: 20.0% cuartos | rating 62.1
+   Uruguay: 32.5% cuartos | rating 77.7
+   Switzerland: 32.5% cuartos | rating 72.8
+   Scotland: 25.0% cuartos | rating 65.0
+   Sweden: 25.0% cuartos | rating 66.2
 
 9. PASE DE GRUPOS POR CONFEDERACIÓN (media)
-   AFC        → 55.2% de media
-   CAF        → 55.0% de media
-   CONCACAF   → 57.8% de media
-   CONMEBOL   → 75.0% de media
-   OFC        → 40.0% de media
-   UEFA       → 82.3% de media
+   AFC        → 43.1% de media
+   CAF        → 52.2% de media
+   CONCACAF   → 48.3% de media
+   CONMEBOL   → 90.4% de media
+   OFC        → 17.5% de media
+   UEFA       → 90.0% de media
 
 -----------------------------------------------------------------
 NOTA: Resultados probabilísticos, no predicciones.

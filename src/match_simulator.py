@@ -1,21 +1,14 @@
 """
 match_simulator.py
 ------------------
-Motor matemático del simulador basado en el modelo Dixon-Coles (1997)
-con factores contextuales del Mundial.
+Motor matemático basado en Dixon-Coles (1997) con factores contextuales.
 
-El modelo Dixon-Coles corrige la distribución de Poisson estándar para
-resultados bajos (0-0, 1-0, 0-1, 1-1), que son sistemáticamente
-mal estimados por Poisson puro. Es el modelo de referencia en
-análisis cuantitativo de fútbol y apuestas deportivas.
-
-Fórmula base:
-    lambda_A = BASE * alpha_A * beta_B * gamma_home * delta_form * epsilon_conf
-    lambda_B = BASE * alpha_B * beta_A * gamma_home * delta_form * epsilon_conf
-
-    P(goals_A=j, goals_B=k) = tau(j,k) * Poisson(j|lambda_A) * Poisson(k|lambda_B)
-
-donde tau es la corrección de Dixon-Coles para resultados bajos.
+CAMBIOS v3:
+- rating_scale reducido a 200: diferencias de rating impactan más
+- home_advantage reducido a 1.04: localía da ventaja pequeña, no decisiva
+- confederación con mayor peso: UEFA/CONMEBOL muy por encima de CAF/AFC
+- attack_coef/defense_coef calibrados con escala Elo real (no normalizada)
+- El resultado debe ser coherente: Argentina ~80% vs equipos mediocres
 """
 
 import numpy as np
@@ -28,171 +21,152 @@ from src.config import (
 )
 
 # \\\\\\\\\\\
-# Corrección tau de Dixon-Coles para resultados bajos
-# Ajusta la probabilidad de 0-0, 1-0, 0-1, 1-1
+# Corrección tau Dixon-Coles para resultados bajos
 # \\\\\\\\\\\
 
-def _tau(j: int, k: int, lam_a: float, lam_b: float, rho: float) -> float:
+def _tau(j: int, k: int, la: float, lb: float, rho: float) -> float:
+    if   j==0 and k==0: return max(1.0 - la*lb*rho, 0.01)
+    elif j==1 and k==0: return 1.0 + lb*rho
+    elif j==0 and k==1: return 1.0 + la*rho
+    elif j==1 and k==1: return 1.0 - rho
+    return 1.0
+
+
+# \\\\\\\\\\\
+# Factor de diferencia de rating — escala exponencial para mayor separación
+# \\\\\\\\\\\
+
+def _rating_factor(ra: float, rb: float) -> float:
     """
-    Factor de corrección de Dixon-Coles para resultados con goles bajos.
-    rho > 0 aumenta la prob de 0-0 y 1-1, reduce 1-0 y 0-1.
+    Usa escala exponencial en lugar de lineal.
+    Con rating_scale=200, una diferencia de 15 puntos (Argentina vs USA)
+    da factor ~1.08 de forma que el xG es claramente mayor.
+    Con diferencia de 40 puntos (España vs Cabo Verde) da ~1.22.
     """
-    if j == 0 and k == 0:
-        return 1.0 - lam_a * lam_b * rho
-    elif j == 1 and k == 0:
-        return 1.0 + lam_b * rho
-    elif j == 0 and k == 1:
-        return 1.0 + lam_a * rho
-    elif j == 1 and k == 1:
-        return 1.0 - rho
-    else:
-        return 1.0
+    diff = (ra - rb) / RATING_SCALE
+    return float(np.clip(np.exp(diff * 0.7), 0.40, 2.50))
 
 
 # \\\\\\\\\\\
-# Factor de rating global: diferencia de nivel entre selecciones
+# Factor de confederación — diferencia real de nivel histórico
 # \\\\\\\\\\\
 
-def _rating_factor(rating_a: float, rating_b: float) -> float:
-    """Convierte diferencia de rating en multiplicador de xG."""
-    diff   = rating_a - rating_b
-    factor = 1.0 + (diff / RATING_SCALE)
-    return float(np.clip(factor, 0.45, 2.2))
+def _conf_ratio(conf_a: str, conf_b: str) -> float:
+    """
+    Ratio de fuerza entre confederaciones.
+    Si UEFA juega contra CAF: ratio = 1.00/0.76 = 1.32 → ventaja real.
+    """
+    strength_a = CONFEDERATION_STRENGTH.get(conf_a, 0.75)
+    strength_b = CONFEDERATION_STRENGTH.get(conf_b, 0.75)
+    ratio = strength_a / strength_b
+    return float(np.clip(ratio, 0.55, 1.55))
 
 
 # \\\\\\\\\\\
-# Factor de ventaja de localía (anfitriones del Mundial)
+# Factor de localía (reducido — solo anfitriones del torneo)
 # \\\\\\\\\\\
 
 def _home_factor(is_host: int) -> float:
-    """Bonus de localía para los países anfitriones (USA, México, Canadá)."""
-    if not USE_HOME_ADVANTAGE:
-        return 1.0
+    if not USE_HOME_ADVANTAGE: return 1.0
     return HOME_ADVANTAGE if int(is_host) else 1.0
 
 
 # \\\\\\\\\\\
-# Factor de forma reciente normalizado
+# Factor de forma reciente (peso reducido)
 # \\\\\\\\\\\
 
 def _form_factor(form_factor: float) -> float:
-    """Aplica el peso de la forma reciente al xG."""
-    if not USE_RECENT_FORM:
-        return 1.0
+    if not USE_RECENT_FORM: return 1.0
     return 1.0 + FORM_WEIGHT * (float(form_factor) - 1.0)
 
 
 # \\\\\\\\\\\
-# Factor de confederación: penaliza/bonifica según nivel medio histórico
-# \\\\\\\\\\\
-
-def _conf_factor(confederation: str) -> float:
-    """
-    Ajuste por confederación. UEFA y CONMEBOL por encima de la media,
-    OFC por debajo. Refleja diferencias históricas de nivel global.
-    """
-    return CONFEDERATION_STRENGTH.get(confederation, 0.80)
-
-
-# \\\\\\\\\\\
-# Cálculo de lambdas (xG) para ambos equipos en un partido
+# Cálculo de lambdas (xG esperados) para cada equipo
 # \\\\\\\\\\\
 
 def compute_lambdas(team_a: pd.Series, team_b: pd.Series) -> tuple[float, float]:
     """
-    Calcula los goles esperados (lambda) para cada equipo usando
-    los coeficientes de ataque/defensa individuales más los factores
-    contextuales del partido.
+    Lambda de Dixon-Coles para cada equipo.
 
-    attack_coef y defense_coef se calibran en ratings.csv.
-    attack_coef > 1 → equipo ofensivo
-    defense_coef < 1 → defensa sólida (dificulta goles al rival)
+    Los factores se aplican de forma asimétrica y multiplicativa:
+      - rating_factor: diferencia global de nivel
+      - attack_coef del equipo que ataca
+      - defense_coef del equipo que defiende (bajo = buena defensa)
+      - conf_ratio: diferencia estructural de confederación
+      - home_factor y form_factor: ajustes menores
     """
-    # Coeficientes individuales del equipo (Dixon-Coles)
     alpha_a = float(team_a.get("attack_coef",  1.0))
     beta_a  = float(team_a.get("defense_coef", 1.0))
     alpha_b = float(team_b.get("attack_coef",  1.0))
     beta_b  = float(team_b.get("defense_coef", 1.0))
 
-    # Factores contextuales
-    rf_a  = _rating_factor(team_a["overall_rating"], team_b["overall_rating"])
-    rf_b  = _rating_factor(team_b["overall_rating"], team_a["overall_rating"])
-    hf_a  = _home_factor(team_a["is_host"])
-    hf_b  = _home_factor(team_b["is_host"])
-    ff_a  = _form_factor(team_a["form_factor"])
-    ff_b  = _form_factor(team_b["form_factor"])
-    cf_a  = _conf_factor(team_a["confederation"])
-    cf_b  = _conf_factor(team_b["confederation"])
+    ra = float(team_a["overall_rating"])
+    rb = float(team_b["overall_rating"])
 
-    # Lambda Dixon-Coles completo
-    lam_a = BASE_GOALS * alpha_a * beta_b * rf_a * hf_a * ff_a * cf_a
-    lam_b = BASE_GOALS * alpha_b * beta_a * rf_b * hf_b * ff_b * cf_b
+    rf_a = _rating_factor(ra, rb)
+    rf_b = _rating_factor(rb, ra)
 
-    # Mínimo técnico para evitar lambda=0
+    conf_a = str(team_a.get("confederation", "UEFA"))
+    conf_b = str(team_b.get("confederation", "UEFA"))
+    cf_ab  = _conf_ratio(conf_a, conf_b)   # >1 si A es de confederación más fuerte
+    cf_ba  = _conf_ratio(conf_b, conf_a)
+
+    hf_a = _home_factor(int(team_a.get("is_host", 0)))
+    hf_b = _home_factor(int(team_b.get("is_host", 0)))
+
+    ff_a = _form_factor(float(team_a.get("form_factor", 1.0)))
+    ff_b = _form_factor(float(team_b.get("form_factor", 1.0)))
+
+    lam_a = BASE_GOALS * alpha_a * beta_b * rf_a * cf_ab * hf_a * ff_a
+    lam_b = BASE_GOALS * alpha_b * beta_a * rf_b * cf_ba * hf_b * ff_b
+
     return max(lam_a, 0.08), max(lam_b, 0.08)
 
 
 # \\\\\\\\\\\
-# Simulación de un partido de fase de grupos con corrección Dixon-Coles
+# Simulación de partido con modelo Dixon-Coles completo
 # \\\\\\\\\\\
 
 def simulate_group_match(team_a: pd.Series, team_b: pd.Series) -> tuple[int, int]:
     """
-    Simula un partido de fase de grupos usando el modelo Dixon-Coles.
-
-    1. Genera distribución bivariante hasta MAX_GOALS goles por equipo.
-    2. Aplica la corrección tau en resultados bajos.
-    3. Muestrea un resultado de la distribución ajustada.
-
-    Returns: (goals_a, goals_b)
+    Genera el resultado usando la distribución bivariante Dixon-Coles.
+    Muestrea de la matriz de probabilidades P(j,k) hasta MAX_GOALS.
     """
     MAX_GOALS = 8
     lam_a, lam_b = compute_lambdas(team_a, team_b)
     rho = DIXON_COLES_RHO
 
-    # Matriz de probabilidades P(j, k) para j,k en [0, MAX_GOALS]
     probs = np.zeros((MAX_GOALS + 1, MAX_GOALS + 1))
     for j in range(MAX_GOALS + 1):
+        pj = poisson.pmf(j, lam_a)
         for k in range(MAX_GOALS + 1):
-            p = (poisson.pmf(j, lam_a)
-                 * poisson.pmf(k, lam_b)
-                 * _tau(j, k, lam_a, lam_b, rho))
-            probs[j, k] = max(p, 0.0)
+            pk  = poisson.pmf(k, lam_b)
+            tau = _tau(j, k, lam_a, lam_b, rho)
+            probs[j, k] = max(pj * pk * tau, 0.0)
 
-    # Normalizar (tau puede desplazar ligeramente la suma de 1)
     total = probs.sum()
     if total <= 0:
         return int(np.random.poisson(lam_a)), int(np.random.poisson(lam_b))
-    probs /= total
 
-    # Muestreo del resultado
-    flat  = probs.ravel()
-    idx   = np.random.choice(len(flat), p=flat)
-    goals_a, goals_b = divmod(idx, MAX_GOALS + 1)
-    return int(goals_a), int(goals_b)
+    probs /= total
+    idx = np.random.choice((MAX_GOALS + 1) ** 2, p=probs.ravel())
+    return divmod(idx, MAX_GOALS + 1)
 
 
 # \\\\\\\\\\\
-# Simulación de un partido de eliminatoria (debe haber ganador)
+# Partido eliminatorio — siempre hay ganador
 # \\\\\\\\\\\
 
 def simulate_knockout_match(team_a: pd.Series, team_b: pd.Series) -> str:
     """
-    Simula un partido de eliminatoria con el modelo Dixon-Coles.
-    Si hay empate en 90 min → penaltis con probabilidad proporcional
-    al parámetro PENALTY_ALPHA (favorece ligeramente al equipo mejor).
-
-    Returns: nombre del equipo ganador.
+    Empate → penaltis con probabilidad proporcional a rating^PENALTY_ALPHA.
+    Con alpha=2.5, el mejor equipo tiene ventaja clara pero no garantizada.
     """
-    goals_a, goals_b = simulate_group_match(team_a, team_b)
+    ga, gb = simulate_group_match(team_a, team_b)
+    if ga > gb: return str(team_a["team"])
+    if gb > ga: return str(team_b["team"])
 
-    if goals_a > goals_b:
-        return str(team_a["team"])
-    elif goals_b > goals_a:
-        return str(team_b["team"])
-    else:
-        # Penaltis: probabilidad proporcional a overall_rating ^ alpha
-        strength_a = float(team_a["overall_rating"]) ** PENALTY_ALPHA
-        strength_b = float(team_b["overall_rating"]) ** PENALTY_ALPHA
-        prob_a     = strength_a / (strength_a + strength_b)
-        return str(team_a["team"]) if np.random.random() < prob_a else str(team_b["team"])
+    ra = float(team_a["overall_rating"]) ** PENALTY_ALPHA
+    rb = float(team_b["overall_rating"]) ** PENALTY_ALPHA
+    prob_a = ra / (ra + rb)
+    return str(team_a["team"]) if np.random.random() < prob_a else str(team_b["team"])
