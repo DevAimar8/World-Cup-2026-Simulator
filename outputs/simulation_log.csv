@@ -1,0 +1,5 @@
+metric,value
+n_simulations,10000
+seed,42
+elapsed_sec,10039.4
+exclude_team,none
