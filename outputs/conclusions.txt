@@ -3,23 +3,23 @@
 =================================================================
 
 1. GRAN FAVORITO AL TÍTULO
-   Spain con 17.5% de probabilidad.
+   Spain con 16.25% de probabilidad.
    Rating compuesto: 88.5
 
 2. EQUIPO MÁS VECES EN LA FINAL
    Brazil llega a la final en el 12.5% de simulaciones.
 
 3. EQUIPO MÁS CONSISTENTE (llega lejos sin grandes altibajos)
-   Spain — índice de consistencia: 37.50
-   Semis: 37.5% | Eliminado en grupos: 0.0%
+   Argentina — índice de consistencia: 27.50
+   Semis: 27.5% | Eliminado en grupos: 0.0%
 
 4. MAYOR VARIANZA — EQUIPO MÁS IMPREDECIBLE
-   Sweden puede ganarlo todo o caer en grupos.
-   Campeón: 5.0% | Eliminado grupos: 30.0%
+   Tunisia puede ganarlo todo o caer en grupos.
+   Campeón: 1.25% | Eliminado grupos: 60.0%
 
 5. MEDIA DE PUNTOS PARA CLASIFICARSE COMO TERCER
-   Clasificados: 3.63
-   Mínimo clasificado: 3.0
+   Clasificados: 3.64
+   Mínimo clasificado: 2.0
    Máximo clasificado: 6.0
    Máximo eliminado: 3.0
 
@@ -30,21 +30,21 @@
    → Canada / Bosnia Herzegovina / Qatar / Switzerland
 
 7. FINAL MÁS PROBABLE
-   Portugal vs Spain — ocurre en el 5.0% de simulaciones.
+   Argentina vs Brazil — ocurre en el 3.75% de simulaciones.
 
 8. POSIBLES SORPRESAS (rating < 80, llegan a cuartos en >5% de simulaciones)
-   Uruguay: 32.5% cuartos | rating 77.7
-   Switzerland: 32.5% cuartos | rating 72.8
-   Scotland: 25.0% cuartos | rating 65.0
-   Sweden: 25.0% cuartos | rating 66.2
+   Uruguay: 33.75% cuartos | rating 77.7
+   Switzerland: 28.75% cuartos | rating 72.8
+   Belgium: 21.25% cuartos | rating 77.9
+   Turkey: 18.75% cuartos | rating 69.8
 
 9. PASE DE GRUPOS POR CONFEDERACIÓN (media)
-   AFC        → 43.1% de media
-   CAF        → 52.2% de media
-   CONCACAF   → 48.3% de media
-   CONMEBOL   → 90.4% de media
-   OFC        → 17.5% de media
-   UEFA       → 90.0% de media
+   AFC        → 45.0% de media
+   CAF        → 48.8% de media
+   CONCACAF   → 50.2% de media
+   CONMEBOL   → 90.8% de media
+   OFC        → 20.0% de media
+   UEFA       → 90.1% de media
 
 -----------------------------------------------------------------
 NOTA: Resultados probabilísticos, no predicciones.
