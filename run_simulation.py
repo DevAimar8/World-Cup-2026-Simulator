@@ -64,7 +64,6 @@ def main():
             label = r["categoria"].replace("RESUMEN - ", "")
             logger.info(f"  {label}: {r['puntos']} puntos")
 
-    logger.info("\n✅ Completado. Revisa la carpeta outputs/")
     logger.info("   Dashboard: streamlit run app/streamlit_app.py")
 
 
