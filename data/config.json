@@ -1,0 +1,27 @@
+{
+  "default_simulations": 10000,
+  "random_seed": 42,
+  "base_goals_per_team": 1.15,
+  "home_advantage_multiplier": 1.04,
+  "form_weight": 0.08,
+  "rating_scale": 200,
+  "use_home_advantage": true,
+  "use_recent_form": true,
+  "third_place_qualifiers": 8,
+  "groups_count": 12,
+  "teams_per_group": 4,
+  "dixon_coles_rho": 0.13,
+  "confederation_strength": {
+    "UEFA": 1.0,
+    "CONMEBOL": 0.97,
+    "CONCACAF": 0.78,
+    "CAF": 0.76,
+    "AFC": 0.75,
+    "OFC": 0.62
+  },
+  "fifa_ranking_weight": 0.3,
+  "elo_weight": 0.45,
+  "sofifa_weight": 0.15,
+  "form_data_weight": 0.1,
+  "penalty_alpha": 2.5
+}
