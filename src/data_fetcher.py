@@ -12,7 +12,7 @@ Fuentes usadas:
 Nota: soccerdata cubre clubes, no selecciones directamente.
       Usamos la media de los mejores clubes de cada país como proxy del
       nivel de la selección nacional. Este es un enfoque razonable y
-      transparente que puede mejorarse con datos FIFA Ranking en el futuro.
+      transparente que puede mejorarse con datos FIFA Ranking.
 """
 
 import logging
