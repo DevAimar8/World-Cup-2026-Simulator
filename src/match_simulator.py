@@ -8,7 +8,6 @@ CAMBIOS v3:
 - home_advantage reducido a 1.04: localía da ventaja pequeña, no decisiva
 - confederación con mayor peso: UEFA/CONMEBOL muy por encima de CAF/AFC
 - attack_coef/defense_coef calibrados con escala Elo real (no normalizada)
-- El resultado debe ser coherente: Argentina ~80% vs equipos mediocres
 """
 
 import numpy as np
