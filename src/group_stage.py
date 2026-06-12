@@ -2,7 +2,7 @@
 group_stage.py
 --------------
 Fase de grupos: todos contra todos en 12 grupos de 4 equipos.
-Ahora también devuelve los puntos de los mejores terceros para
+Ddevuelve los puntos de los mejores terceros para
 calcular la media de puntos con la que se clasifican.
 """
 
