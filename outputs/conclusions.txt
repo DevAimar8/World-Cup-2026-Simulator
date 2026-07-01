@@ -1,0 +1,18 @@
+=================================================================
+  CONCLUSIONES — FIFA WORLD CUP 2026 PREDICTION MODEL
+  Autor: Aimar Esqueta
+=================================================================
+
+1. GRAN FAVORITO: Spain (17.05%)
+2. MÁS VECES EN LA FINAL: France (13.25%)
+3. MÁS CONSISTENTE: Spain (índice 7.12)
+4. GRUPO MÁS DURO:   Grupo F  (rating 59.2)
+5. GRUPO MÁS FÁCIL:  Grupo B (rating 52.4)
+6. FINAL MÁS PROBABLE: France vs Spain (2.8%)
+7. MEDIA PUNTOS TERCER CLASIFICADO: 3.60 pts
+
+-----------------------------------------------------------------
+Modelo: Dixon-Coles (1997) + Power Score propio
+Datos: FIFA Rankings jun 2026 + ELO + API-Football
+Autor: Aimar Esqueta — Data · Insights · Impact
+-----------------------------------------------------------------

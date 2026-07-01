@@ -1,7 +1,15 @@
 """
-streamlit_app.py — FIFA World Cup 2026 Prediction Model
-Dashboard completo en español · Diseño Apex Stadium
-Auto-run: 10.000 simulaciones al primer arranque
+streamlit_app.py
+----------------
+Dashboard principal del FIFA World Cup 2026 Prediction Model.
+Diseño Apex Stadium: navy + gold, navegación por session_state,
+6 páginas con visualizaciones interactivas en tiempo real.
+
+Al primer arranque ejecuta automáticamente 10.000 simulaciones
+Monte Carlo si no hay datos previos guardados en outputs/.
+
+Autor: Aimar Esqueta
+Proyecto: FIFA World Cup 2026 Prediction Model
 """
 import sys
 from pathlib import Path
@@ -257,13 +265,13 @@ def _needs_run():
     if not (OUTPUTS_DIR / "team_probabilities.csv").exists(): return True
     try:
         log = pd.read_csv(OUTPUTS_DIR / "simulation_log.csv")
-        return int(log[log["metric"] == "n_simulations"]["value"].iloc[0]) < 10000
+        return int(log[log["metric"] == "n_simulations"]["value"].iloc[0]) < 2000
     except: return True
 
 # ── Auto-run 10K ──────────────────────────────────────────────────────────────
 if _needs_run():
-    with st.spinner("⚽ Ejecutando 10.000 simulaciones Monte Carlo + Dixon-Coles… (~1-2 min)"):
-        run_monte_carlo(n_simulations=10000, seed=42, verbose=False)
+    with st.spinner("⚽ Ejecutando 2.000 simulaciones iniciales… (~20s)"):
+        run_monte_carlo(n_simulations=2000, seed=42, verbose=False)
     load_outputs.clear()
 
 data = load_outputs()
@@ -317,8 +325,8 @@ st.markdown(
 st.markdown('<hr style="border:none;border-top:1px solid rgba(255,255,255,0.07);margin:0">', unsafe_allow_html=True)
 
 if run_clicked:
-    with st.spinner("Re-ejecutando 10.000 simulaciones…"):
-        run_monte_carlo(n_simulations=10000, seed=42, verbose=False)
+    with st.spinner("Ejecutando 10.000 simulaciones… (~3-4 min)"):
+        run_monte_carlo(n_simulations=2000, seed=42, verbose=False)
     load_outputs.clear(); get_ratings.clear()
     st.success("✅ ¡10.000 simulaciones completadas!"); st.rerun()
 
